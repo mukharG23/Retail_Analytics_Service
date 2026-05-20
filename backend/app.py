@@ -2,6 +2,8 @@ import os
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from metadata_logger import log_metadata
+from preprocessor import process_image
+from preprocessor import process_image, subtract_background
 
 app = Flask(__name__)
 
@@ -30,6 +32,9 @@ def upload_image():
     save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(save_path)
     log_metadata(filename, save_path)
+    processed_path = process_image(save_path)
+    print(f"processed_path returned: {processed_path}")
+    subtract_background(processed_path)
 
     return jsonify({'message': 'File uploaded successfully', 'filename': filename}), 200
 
