@@ -1,11 +1,15 @@
 import os
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
-from metadata_logger import log_metadata
-from preprocessor import process_image
 from preprocessor import process_image, subtract_background
+from metadata_logger import log_metadata
+from traffic_counter import count_people
+from database import init_db, log_traffic, get_traffic_logs
 
 app = Flask(__name__)
+CORS(app)
+init_db()
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -27,16 +31,20 @@ def upload_image():
 
     if not allowed_file(file.filename):
         return jsonify({'error': 'File type not allowed'}), 400
+@app.route('/traffic', methods=['GET'])
+def traffic_logs():
+    logs = get_traffic_logs()
+    return jsonify(logs), 200
 
     filename = secure_filename(file.filename)
     save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(save_path)
     log_metadata(filename, save_path)
     processed_path = process_image(save_path)
-    print(f"processed_path returned: {processed_path}")
-    subtract_background(processed_path)
+    count=count_people(processed_path)
+    log_traffic(filename,'Aisle-1',count)
 
-    return jsonify({'message': 'File uploaded successfully', 'filename': filename}), 200
+    return jsonify({'message': 'File uploaded successfully', 'filename': filename,'people_count': count}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
