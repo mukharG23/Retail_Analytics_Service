@@ -1,15 +1,13 @@
 import cv2
-bg_subtractor = cv2.createBackgroundSubtractorMOG2(history=500, varThreshold=50, detectShadows=False)
 import os
+from PIL import Image
+import numpy as np 
 
 PROCESSED_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads', 'processed')
 
 def process_image(image_path, width=640, height=480):
-    image = cv2.imread(image_path)
-    print(f"Trying to read: {image_path}")
-    print(f"File exists: {os.path.exists(image_path)}")
-    print(f"File size: {os.path.getsize(image_path)}")
-
+    pil_image = Image.open(image_path).convert('RGB')
+    image = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
     if image is None:
         print(f"Error: Could not read image at {image_path}")
         return None
