@@ -6,6 +6,7 @@ from preprocessor import process_image, subtract_background
 from metadata_logger import log_metadata
 from traffic_counter import count_people
 from database import init_db, log_traffic, get_traffic_logs
+from congestion import get_congestion_level, get_top_congested_aisles
 
 app = Flask(__name__)
 CORS(app)
@@ -31,6 +32,22 @@ def upload_image():
 
     if not allowed_file(file.filename):
         return jsonify({'error': 'File type not allowed'}), 400
+
+    filename = secure_filename(file.filename)
+    save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file.save(save_path)
+    log_metadata(filename, save_path)
+    processed_path = process_image(save_path)
+    count = count_people(processed_path)
+    congestion_level = get_congestion_level(count)
+    log_traffic(filename, 'Aisle-1', count, congestion_level)
+
+    return jsonify({
+        'message': 'File uploaded successfully',
+        'filename': filename,
+        'people_count': count,
+        'congestion_level': congestion_level
+    }), 200
 @app.route('/traffic', methods=['GET'])
 def traffic_logs():
     logs = get_traffic_logs()
@@ -42,9 +59,16 @@ def traffic_logs():
     log_metadata(filename, save_path)
     processed_path = process_image(save_path)
     count=count_people(processed_path)
-    log_traffic(filename,'Aisle-1',count)
+    congestion_level=get_congestion_level(count)
+    log_traffic(filename,'Aisle-1',count,congestion_level)
 
-    return jsonify({'message': 'File uploaded successfully', 'filename': filename,'people_count': count}), 200
+    return jsonify({'message': 'File uploaded successfully', 'filename': filename,'people_count': count,'congestion count':congestion_level}), 200
+
+@app.route('/top-congested', methods=['GET'])
+def top_congested():
+    logs = get_traffic_logs()
+    top = get_top_congested_aisles(logs)
+    return jsonify(top), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
