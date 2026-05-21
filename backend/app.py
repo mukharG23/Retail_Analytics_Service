@@ -1,12 +1,13 @@
 import os
 from flask import Flask, request, jsonify
-from flask_cors import CORS
 from werkzeug.utils import secure_filename
-from preprocessor import process_image, subtract_background
+from flask_cors import CORS
+from preprocessor import process_image
 from metadata_logger import log_metadata
-from traffic_counter import count_people
 from database import init_db, log_traffic, get_traffic_logs
-from congestion import get_congestion_level, get_top_congested_aisles
+from congestion import get_congestion_level
+from yolo_detector import detect_people_threaded
+from traffic_analyzer import analyze_traffic, generate_audit_log
 
 app = Flask(__name__)
 CORS(app)
@@ -38,15 +39,12 @@ def upload_image():
     file.save(save_path)
     log_metadata(filename, save_path)
     processed_path = process_image(save_path)
-    count = count_people(processed_path)
-    congestion_level = get_congestion_level(count)
-    log_traffic(filename, 'Aisle-1', count, congestion_level)
+    detect_people_threaded(save_path, filename, 'Aisle-1')
 
     return jsonify({
         'message': 'File uploaded successfully',
         'filename': filename,
-        'people_count': count,
-        'congestion_level': congestion_level
+        'note': 'People count being processed in background'
     }), 200
 @app.route('/traffic', methods=['GET'])
 def traffic_logs():
@@ -64,6 +62,21 @@ def traffic_logs():
 
     return jsonify({'message': 'File uploaded successfully', 'filename': filename,'people_count': count,'congestion count':congestion_level}), 200
 
+@app.route('/analyze', methods=['GET'])
+def analyze():
+    result = analyze_traffic()
+    if result is None:
+        return jsonify({'error': 'No data to analyze'}), 400
+    return jsonify(result), 200
+
+@app.route('/audit', methods=['GET'])
+def audit():
+    report_path = generate_audit_log()
+    if report_path is None:
+        return jsonify({'error': 'No data for audit log'}), 400
+    return jsonify({'message': 'Audit log generated', 'path': report_path}), 200
+
+    
 @app.route('/top-congested', methods=['GET'])
 def top_congested():
     logs = get_traffic_logs()
