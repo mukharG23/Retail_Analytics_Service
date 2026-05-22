@@ -4,3 +4,6 @@ Pillow
 flask-cors
 ultralytics
 pandas
+inference-sdk
+python-dotenv
+groq

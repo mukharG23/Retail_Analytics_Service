@@ -1,4 +1,5 @@
 import os
+import sqlite3
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
@@ -8,13 +9,14 @@ from database import init_db, log_traffic, get_traffic_logs
 from congestion import get_congestion_level
 from yolo_detector import detect_people_threaded
 from traffic_analyzer import analyze_traffic, generate_audit_log
+from report_generator import generate_ai_report
 
 app = Flask(__name__)
 CORS(app)
 init_db()
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg','webp'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -82,6 +84,31 @@ def top_congested():
     logs = get_traffic_logs()
     top = get_top_congested_aisles(logs)
     return jsonify(top), 200
+
+@app.route('/clear', methods=['DELETE'])
+def clear_logs():
+    conn = sqlite3.connect(os.path.join(os.path.dirname(__file__), '..', 'database.db'))
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM traffic_logs')
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'All logs cleared successfully'}), 200
+
+@app.route('/delete/<int:log_id>', methods=['DELETE'])
+def delete_log(log_id):
+    conn = sqlite3.connect(os.path.join(os.path.dirname(__file__), '..', 'database.db'))
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM traffic_logs WHERE id = ?', (log_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': f'Log {log_id} deleted'}), 200
+
+@app.route('/ai-report', methods=['GET'])
+def ai_report():
+    report_path = generate_ai_report()
+    if report_path is None:
+        return jsonify({'error': 'No data to generate report'}), 400
+    return jsonify({'message': 'AI report generated', 'path': report_path}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
