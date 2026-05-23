@@ -35,7 +35,15 @@ def detect_carts(image_path):
         return 0
 
 def detect_people(image_path, filename, aisle='Aisle-1'):
-    results = model(image_path,conf=0.6)
+    from PIL import Image as PILImage
+    import numpy as np
+    import cv2
+    
+    pil_image = PILImage.open(image_path).convert('RGB')
+    img_array = np.array(pil_image)
+    img_bgr = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+    
+    results = model(img_bgr, conf=0.28)
 
     people_count = 0
     for result in results:

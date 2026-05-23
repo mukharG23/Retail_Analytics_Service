@@ -1,0 +1,14 @@
+
+
+services:
+  shelfsight:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/uploads:/app/backend/uploads
+      - ./logs:/app/logs
+      - ./database.db:/app/database.db
+    env_file:
+      - .env
+    restart: unless-stopped
