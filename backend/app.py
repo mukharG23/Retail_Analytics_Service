@@ -8,6 +8,7 @@ from metadata_logger import log_metadata
 from database import init_db, log_traffic, get_traffic_logs
 from congestion import get_congestion_level
 from yolo_detector import detect_people_threaded
+from video_processor import analyze_video_threaded
 from traffic_analyzer import analyze_traffic, generate_audit_log
 from report_generator import generate_ai_report
 
@@ -18,10 +19,15 @@ init_db()
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg','webp'}
 
+VIDEO_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads', 'videos')
+ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'avi', 'mov', 'mkv'}
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def allowed_video(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_VIDEO_EXTENSIONS
 
 @app.route('/upload', methods=['POST'])
 def upload_image():
@@ -48,6 +54,34 @@ def upload_image():
         'filename': filename,
         'note': 'People count being processed in background'
     }), 200
+
+@app.route('/upload-video', methods=['POST'])
+def upload_video():
+    print("Video upload route hit!")
+
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part in request'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+
+    if not allowed_video(file.filename):
+        return jsonify({'error': 'File type not allowed. Use mp4, avi, mov or mkv'}), 400
+
+    filename = secure_filename(file.filename)
+    save_path = os.path.join(VIDEO_FOLDER, filename)
+    file.save(save_path)
+
+    analyze_video_threaded(save_path, filename, 'Aisle-1')
+
+    return jsonify({
+        'message': 'Video uploaded successfully, analysis started in background',
+        'filename': filename,
+        'note': 'Check /traffic in a minute for results'
+    }), 200
+    
 @app.route('/traffic', methods=['GET'])
 def traffic_logs():
     logs = get_traffic_logs()
