@@ -44,7 +44,7 @@ def extract_frames(video_path):
     print(f"Extracted {saved_count} frames from video")
     return frame_paths
 
-def annotate_frame(frame_path, results):
+def annotate_frame(frame_path, results,frame_index):
     frame = cv2.imread(frame_path)
     
     for result in results:
@@ -54,16 +54,19 @@ def annotate_frame(frame_path, results):
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
                 conf = float(box.conf[0])
                 
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 212, 170), 2)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (57, 255, 20), 2)
                 
                 label = f"Person {conf:.2f}"
                 label_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)[0]
-                cv2.rectangle(frame, (x1, y1 - 20), (x1 + label_size[0], y1), (0, 212, 170), -1)
+                cv2.rectangle(frame, (x1, y1 - 20), (x1 + label_size[0], y1), (57, 255, 20), -1)
                 cv2.putText(frame, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
-    annotated_filename = "latest_annotated.jpg"
+    annotated_filename = f"frame_{frame_index:04d}.jpg"
     annotated_path = os.path.join(ANNOTATED_FOLDER, annotated_filename)
     cv2.imwrite(annotated_path, frame)
+
+    latest_path = os.path.join(ANNOTATED_FOLDER, 'latest_annotated.jpg')
+    cv2.imwrite(latest_path, frame)
     
     return annotated_path
 
@@ -88,7 +91,7 @@ def analyze_video(video_path, filename, aisle='Aisle-1'):
                 if int(cls) == 0:
                     people_count += 1
 
-        annotate_frame(frame_path, results)
+        annotate_frame(frame_path, results,i)
         counts.append(people_count)
         print(f"Frame {i+1}: {people_count} people")
 

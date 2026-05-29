@@ -1,12 +1,5 @@
 const API = 'http://127.0.0.1:5000';
 
-function fetchAll() {
-    fetchLogs();
-    fetchAnalysis();
-    fetchCongestionStats();
-    fetchLatestFrame();
-}
-
 function fetchAnalysis() {
     fetch(`${API}/analyze`)
         .then(r => r.json())
@@ -43,22 +36,60 @@ function fetchCongestionStats() {
         .catch(() => {});
 }
 
-function fetchLatestFrame() {
-    fetch(`${API}/latest-frame`)
+let frameList = [];
+let currentFrameIndex = 0;
+let framePlayerInterval = null;
+
+function fetchFrameList() {
+    fetch(`${API}/frames-list`)
         .then(r => r.json())
         .then(data => {
-            const img = document.getElementById('feed-img');
-            const empty = document.getElementById('feed-empty');
-            const overlay = document.getElementById('feed-overlay');
-            const status = document.getElementById('feed-status');
-
-            img.src = `${API}${data.url}?t=${Date.now()}`;
-            img.style.display = 'block';
-            empty.style.display = 'none';
-            overlay.style.display = 'block';
-            status.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+            if (data.frames.length === 0) return;
+            frameList = data.frames;
+            //currentFrameIndex = 0;
+            if (!framePlayerInterval) {
+                startFramePlayer();
+            }
         })
         .catch(() => {});
+}
+
+function startFramePlayer() {
+    const img = document.getElementById('feed-img');
+    const empty = document.getElementById('feed-empty');
+    const overlay = document.getElementById('feed-overlay');
+    const status = document.getElementById('feed-status');
+
+    // Add smooth transition to image
+    img.style.transition = 'opacity 0.2s ease';
+
+    framePlayerInterval = setInterval(() => {
+        if (frameList.length === 0) return;
+
+        const filename = frameList[currentFrameIndex];
+        const newSrc = `${API}/annotated/${filename}`;
+
+        const tempImg = new Image();
+        tempImg.onload = () => {
+            img.style.opacity = '0';
+            setTimeout(() => {
+                img.src = newSrc;
+                img.style.display = 'block';
+                img.style.opacity = '1';
+                empty.style.display = 'none';
+                overlay.style.display = 'block';
+                overlay.textContent = `Frame ${currentFrameIndex + 1}/${frameList.length}`;
+                status.textContent = 'Playing • ' + new Date().toLocaleTimeString();
+            }, 10);
+        };
+        tempImg.src = newSrc;
+
+        currentFrameIndex = (currentFrameIndex + 1) % frameList.length;
+    }, 500);
+}
+
+function fetchLatestFrame() {
+    fetchFrameList();
 }
 
 function animateValue(id, target) {
@@ -143,14 +174,34 @@ function deleteLog(id, btn) {
     if (!confirm(`Delete record #${id}?`)) return;
     btn.disabled = true;
     fetch(`${API}/delete/${id}`, { method: 'DELETE' })
-        .then(() => fetchAll())
+        .then(() => {
+            fetchLogs();
+            fetchAnalysis();
+            fetchCongestionStats();
+        })
         .catch(() => { btn.disabled = false; });
 }
 
 function clearLogs() {
     if (!confirm('Delete all traffic logs? This cannot be undone.')) return;
-    fetch(`${API}/clear`, { method: 'DELETE' }).then(() => fetchAll());
+    fetch(`${API}/clear`, { method: 'DELETE' })
+        .then(() => {
+            fetchLogs();
+            fetchAnalysis();
+            fetchCongestionStats();
+        });
 }
 
-fetchAll();
-setInterval(fetchAll, 30000);
+// Initial load
+fetchLogs();
+fetchAnalysis();
+fetchCongestionStats();
+fetchLatestFrame();
+
+// Refresh data every 30 seconds
+setInterval(() => {
+    fetchLogs();
+    fetchAnalysis();
+    fetchCongestionStats();
+}, 30000);
+setInterval(fetchLatestFrame, 10000);

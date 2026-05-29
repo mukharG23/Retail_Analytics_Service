@@ -287,5 +287,14 @@ def serve_annotated(filename):
     annotated_folder = os.path.join(os.path.dirname(__file__), 'uploads', 'annotated')
     return send_from_directory(annotated_folder, filename)
 
+@app.route('/frames-list', methods=['GET'])
+def frames_list():
+    annotated_folder = os.path.join(os.path.dirname(__file__), 'uploads', 'annotated')
+    frames = sorted([
+        f for f in os.listdir(annotated_folder)
+        if f.startswith('frame_') and f.endswith('.jpg')
+    ])
+    return jsonify({'frames': frames}), 200
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0',debug=True)
