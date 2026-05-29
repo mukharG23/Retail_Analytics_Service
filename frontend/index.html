@@ -5,550 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShelfSight Analytics</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-        :root {
-            --bg: #0a0a0f;
-            --surface: #111118;
-            --surface-2: #1a1a24;
-            --surface-3: #22222f;
-            --border: rgba(255,255,255,0.08);
-            --border-2: rgba(255,255,255,0.12);
-            --text-primary: #f0f0f5;
-            --text-secondary: #8888a0;
-            --text-muted: #55556a;
-            --accent: #6c63ff;
-            --accent-glow: rgba(108,99,255,0.3);
-            --accent-2: #00d4aa;
-            --low: #00d4aa;
-            --low-bg: rgba(0,212,170,0.1);
-            --low-border: rgba(0,212,170,0.2);
-            --medium: #f59e0b;
-            --medium-bg: rgba(245,158,11,0.1);
-            --medium-border: rgba(245,158,11,0.2);
-            --high: #ff4757;
-            --high-bg: rgba(255,71,87,0.1);
-            --high-border: rgba(255,71,87,0.2);
-            --radius: 16px;
-            --radius-sm: 10px;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* Animated background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(ellipse at 20% 20%, rgba(108,99,255,0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(0,212,170,0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(255,71,87,0.03) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* Header */
-        header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: rgba(10,10,15,0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-            padding: 0 32px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo-icon {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, var(--accent), #a855f7);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            box-shadow: 0 0 20px var(--accent-glow);
-        }
-
-        .logo-text {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #f0f0f5 0%, #8888a0 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .logo-text span {
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .live-badge {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            background: rgba(0,212,170,0.1);
-            border: 1px solid rgba(0,212,170,0.2);
-            padding: 5px 12px;
-            border-radius: 20px;
-        }
-
-        .live-dot {
-            width: 7px;
-            height: 7px;
-            background: var(--low);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--low);
-            animation: livePulse 2s infinite;
-        }
-
-        @keyframes livePulse {
-            0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--low); }
-            50% { opacity: 0.5; box-shadow: 0 0 4px var(--low); }
-        }
-
-        .live-text {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--low);
-            letter-spacing: 0.5px;
-        }
-
-        /* Main */
-        main {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 24px;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Page header */
-        .page-header {
-            margin-bottom: 36px;
-            animation: fadeUp 0.5s ease both;
-        }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .page-title {
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: -0.8px;
-            margin-bottom: 6px;
-            background: linear-gradient(135deg, #f0f0f5 30%, #8888a0 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .page-subtitle {
-            font-size: 14px;
-            color: var(--text-secondary);
-            font-weight: 400;
-        }
-
-        /* Stats grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .stat-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.2s, border-color 0.2s;
-            animation: fadeUp 0.5s ease both;
-        }
-
-        .stat-card:nth-child(1) { animation-delay: 0.1s; }
-        .stat-card:nth-child(2) { animation-delay: 0.15s; }
-        .stat-card:nth-child(3) { animation-delay: 0.2s; }
-        .stat-card:nth-child(4) { animation-delay: 0.25s; }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--border-2);
-        }
-
-        .stat-card:hover::before { opacity: 1; }
-
-        .stat-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-        }
-
-        .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: -1.5px;
-            font-family: 'JetBrains Mono', monospace;
-            line-height: 1;
-            margin-bottom: 6px;
-        }
-
-        .stat-sub {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .stat-icon {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 22px;
-            opacity: 0.4;
-        }
-
-        /* Section header */
-        .section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-
-        .section-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
-
-        /* Tiles */
-        .tiles-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .tile {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            transition: transform 0.2s, border-color 0.2s;
-            animation: fadeUp 0.5s ease both;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .tile::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            border-radius: 0 0 var(--radius) var(--radius);
-        }
-
-        .tile.LOW::after { background: linear-gradient(90deg, var(--low), transparent); }
-        .tile.MEDIUM::after { background: linear-gradient(90deg, var(--medium), transparent); }
-        .tile.HIGH::after { background: linear-gradient(90deg, var(--high), transparent); }
-
-        .tile:hover {
-            transform: translateY(-3px);
-            border-color: var(--border-2);
-        }
-
-        .tile-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .tile-aisle {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
-
-        .tile-badge {
-            font-size: 10px;
-            font-weight: 700;
-            padding: 3px 9px;
-            border-radius: 20px;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .tile.LOW .tile-badge { background: var(--low-bg); color: var(--low); border: 1px solid var(--low-border); }
-        .tile.MEDIUM .tile-badge { background: var(--medium-bg); color: var(--medium); border: 1px solid var(--medium-border); }
-        .tile.HIGH .tile-badge { background: var(--high-bg); color: var(--high); border: 1px solid var(--high-border); }
-
-        .tile-count {
-            font-size: 40px;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-            letter-spacing: -2px;
-            line-height: 1;
-        }
-
-        .tile.LOW .tile-count { color: var(--low); text-shadow: 0 0 30px rgba(0,212,170,0.3); }
-        .tile.MEDIUM .tile-count { color: var(--medium); text-shadow: 0 0 30px rgba(245,158,11,0.3); }
-        .tile.HIGH .tile-count { color: var(--high); text-shadow: 0 0 30px rgba(255,71,87,0.3); }
-
-        .tile-label {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        /* Table card */
-        .table-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            overflow: hidden;
-            animation: fadeUp 0.5s 0.3s ease both;
-        }
-
-        .table-toolbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 18px 24px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .table-toolbar-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .record-pill {
-            font-size: 11px;
-            font-weight: 600;
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--text-muted);
-            background: var(--surface-2);
-            border: 1px solid var(--border);
-            padding: 3px 10px;
-            border-radius: 20px;
-        }
-
-        .toolbar-actions { display: flex; gap: 8px; }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 14px;
-            border-radius: var(--radius-sm);
-            font-size: 12px;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            border: 1px solid transparent;
-            transition: all 0.15s;
-            letter-spacing: 0.2px;
-        }
-
-        .btn-ghost {
-            background: var(--surface-2);
-            border-color: var(--border);
-            color: var(--text-secondary);
-        }
-
-        .btn-ghost:hover {
-            background: var(--surface-3);
-            color: var(--text-primary);
-            border-color: var(--border-2);
-        }
-
-        .btn-danger {
-            background: var(--high-bg);
-            border-color: var(--high-border);
-            color: var(--high);
-        }
-
-        .btn-danger:hover {
-            background: rgba(255,71,87,0.2);
-        }
-
-        table { width: 100%; border-collapse: collapse; }
-
-        thead th {
-            padding: 12px 20px;
-            text-align: left;
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            background: var(--surface-2);
-            border-bottom: 1px solid var(--border);
-        }
-
-        tbody td {
-            padding: 14px 20px;
-            font-size: 13px;
-            color: var(--text-primary);
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-            transition: background 0.1s;
-        }
-
-        tbody tr:last-child td { border-bottom: none; }
-        tbody tr:hover td { background: var(--surface-2); }
-
-        .td-num {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .td-filename {
-            font-weight: 500;
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            color: var(--text-primary);
-        }
-
-        .td-aisle {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-        .td-count {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--accent-2);
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 3px 9px;
-            border-radius: 20px;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .badge-dot { width: 5px; height: 5px; border-radius: 50%; }
-        .badge.LOW { background: var(--low-bg); color: var(--low); border: 1px solid var(--low-border); }
-        .badge.LOW .badge-dot { background: var(--low); box-shadow: 0 0 4px var(--low); }
-        .badge.MEDIUM { background: var(--medium-bg); color: var(--medium); border: 1px solid var(--medium-border); }
-        .badge.MEDIUM .badge-dot { background: var(--medium); }
-        .badge.HIGH { background: var(--high-bg); color: var(--high); border: 1px solid var(--high-border); }
-        .badge.HIGH .badge-dot { background: var(--high); box-shadow: 0 0 4px var(--high); }
-
-        .btn-row-delete {
-            background: transparent;
-            border: 1px solid transparent;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 5px 9px;
-            border-radius: 6px;
-            font-size: 12px;
-            transition: all 0.15s;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .btn-row-delete:hover {
-            background: var(--high-bg);
-            border-color: var(--high-border);
-            color: var(--high);
-        }
-
-        /* Empty state */
-        .empty-state {
-            text-align: center;
-            padding: 72px 20px;
-            color: var(--text-muted);
-        }
-
-        .empty-icon { font-size: 40px; margin-bottom: 16px; opacity: 0.5; }
-        .empty-title { font-size: 16px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
-        .empty-sub { font-size: 13px; color: var(--text-muted); }
-
-        .loading {
-            text-align: center;
-            padding: 48px;
-            color: var(--text-muted);
-            font-size: 13px;
-        }
-
-        @media (max-width: 768px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .tiles-grid { grid-template-columns: 1fr; }
-            main { padding: 24px 16px; }
-            header { padding: 0 16px; }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -571,12 +28,13 @@
         <p class="page-subtitle">Real-time foot traffic monitoring across store aisles</p>
     </div>
 
+    <!-- Stats -->
     <div class="stats-grid">
         <div class="stat-card">
-            <span class="stat-icon">📸</span>
-            <div class="stat-label">Total Uploads</div>
+            <span class="stat-icon">📊</span>
+            <div class="stat-label">Total Analyses</div>
             <div class="stat-value" id="stat-uploads">—</div>
-            <div class="stat-sub">images analyzed</div>
+            <div class="stat-sub">images + videos</div>
         </div>
         <div class="stat-card">
             <span class="stat-icon">👥</span>
@@ -598,17 +56,64 @@
         </div>
     </div>
 
+    <!-- Live Feed -->
     <div class="section-header">
-        <span class="section-title">Top Aisles</span>
+        <span class="section-title">Live Feed</span>
+        <span class="live-feed-status" id="feed-status">Waiting for analysis...</span>
     </div>
-    <div class="tiles-grid" id="tiles">
-        <div class="tile LOW" style="opacity:0.3;">
-            <div class="tile-top"><span class="tile-aisle">Loading...</span></div>
-            <div class="tile-count">—</div>
-            <div class="tile-label">people detected</div>
+    <div class="feed-card" id="feed-card">
+        <div class="feed-empty" id="feed-empty">
+            <div class="empty-icon">📹</div>
+            <div class="empty-title">No feed available</div>
+            <div class="empty-sub">Upload a video or image to see annotated detection</div>
+        </div>
+        <img id="feed-img" src="" alt="Latest annotated frame" style="display:none; width:100%; border-radius:12px;"/>
+        <div class="feed-overlay" id="feed-overlay" style="display:none;">
+            <span id="feed-count"></span>
         </div>
     </div>
 
+    <!-- Congestion Distribution + Top Aisles -->
+    <div class="middle-grid">
+
+        <div class="dist-card">
+            <div class="dist-title">Congestion Distribution</div>
+            <div class="dist-row">
+                <div class="dist-label"><span class="dist-dot low"></span>LOW</div>
+                <div class="dist-bar-wrap"><div class="dist-bar low" id="bar-low"></div></div>
+                <div class="dist-count" id="count-low">—</div>
+                <div class="dist-percent" id="pct-low"></div>
+            </div>
+            <div class="dist-row">
+                <div class="dist-label"><span class="dist-dot medium"></span>MED</div>
+                <div class="dist-bar-wrap"><div class="dist-bar medium" id="bar-medium"></div></div>
+                <div class="dist-count" id="count-medium">—</div>
+                <div class="dist-percent" id="pct-medium"></div>
+            </div>
+            <div class="dist-row">
+                <div class="dist-label"><span class="dist-dot high"></span>HIGH</div>
+                <div class="dist-bar-wrap"><div class="dist-bar high" id="bar-high"></div></div>
+                <div class="dist-count" id="count-high">—</div>
+                <div class="dist-percent" id="pct-high"></div>
+            </div>
+        </div>
+
+        <div class="tiles-section">
+            <div class="section-header">
+                <span class="section-title">Top Aisles</span>
+            </div>
+            <div class="tiles-grid" id="tiles">
+                <div class="tile LOW" style="opacity:0.3;">
+                    <div class="tile-top"><span class="tile-aisle">Loading...</span></div>
+                    <div class="tile-count">—</div>
+                    <div class="tile-label">people detected</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Traffic Log Table -->
     <div class="table-card">
         <div class="table-toolbar">
             <div class="table-toolbar-left">
@@ -626,116 +131,6 @@
     </div>
 </main>
 
-<script>
-    const API = 'http://127.0.0.1:5000';
-
-    function fetchAll() {
-        fetchLogs();
-        fetchAnalysis();
-    }
-
-    function fetchAnalysis() {
-        fetch(`${API}/analyze`)
-            .then(r => r.json())
-            .then(d => {
-                animateValue('stat-uploads', d.total_uploads ?? 0);
-                animateValue('stat-people', d.total_people_detected ?? 0);
-                document.getElementById('stat-aisle').textContent = d.busiest_aisle ?? '—';
-                document.getElementById('stat-peak').textContent = d.peak_hour ?? '—';
-            })
-            .catch(() => {});
-    }
-
-    function animateValue(id, target) {
-        const el = document.getElementById(id);
-        const start = parseInt(el.textContent) || 0;
-        const duration = 600;
-        const startTime = performance.now();
-        function update(now) {
-            const progress = Math.min((now - startTime) / duration, 1);
-            const ease = 1 - Math.pow(1 - progress, 3);
-            el.textContent = Math.round(start + (target - start) * ease);
-            if (progress < 1) requestAnimationFrame(update);
-        }
-        requestAnimationFrame(update);
-    }
-
-    function fetchLogs() {
-        fetch(`${API}/traffic`)
-            .then(r => r.json())
-            .then(data => {
-                const container = document.getElementById('table-container');
-                const tiles = document.getElementById('tiles');
-                document.getElementById('record-count').textContent = `${data.length} record${data.length !== 1 ? 's' : ''}`;
-                tiles.innerHTML = '';
-
-                if (data.length === 0) {
-                    tiles.innerHTML = `<div class="tile LOW" style="opacity:0.4;"><div class="tile-top"><span class="tile-aisle">No data</span></div><div class="tile-count">—</div><div class="tile-label">upload images to begin</div></div>`;
-                    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">No traffic data yet</div><div class="empty-sub">Upload store images via the API to get started</div></div>`;
-                    return;
-                }
-
-                const icons = { LOW: '🟢', MEDIUM: '🟡', HIGH: '🔴' };
-                data.slice(0, 3).forEach((log, i) => {
-                    const tile = document.createElement('div');
-                    tile.className = `tile ${log.congestion_level}`;
-                    tile.style.animationDelay = `${0.1 + i * 0.08}s`;
-                    tile.innerHTML = `
-                        <div class="tile-top">
-                            <span class="tile-aisle">${log.aisle}</span>
-                            <span class="tile-badge">${log.congestion_level}</span>
-                        </div>
-                        <div class="tile-count">${log.people_count}</div>
-                        <div class="tile-label">people detected • ${log.timestamp.split(' ')[1]}</div>`;
-                    tiles.appendChild(tile);
-                });
-
-                const rows = data.map((log, i) => `
-                    <tr>
-                        <td class="td-num">${i + 1}</td>
-                        <td><span class="td-filename" title="${log.filename}">${log.filename}</span></td>
-                        <td><span class="td-aisle">${log.aisle}</span></td>
-                        <td><span class="td-count">${log.people_count}</span></td>
-                        <td><span class="badge ${log.congestion_level}"><span class="badge-dot"></span>${log.congestion_level}</span></td>
-                        <td class="td-num">${log.timestamp}</td>
-                        <td><button class="btn-row-delete" onclick="deleteLog(${log.id}, this)">✕</button></td>
-                    </tr>`).join('');
-
-                container.innerHTML = `
-                    <table>
-                        <thead><tr>
-                            <th>#</th><th>Filename</th><th>Aisle</th>
-                            <th>People</th><th>Congestion</th><th>Timestamp</th><th></th>
-                        </tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>`;
-            })
-            .catch(() => {
-                document.getElementById('table-container').innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">⚠️</div>
-                        <div class="empty-title">Cannot connect to server</div>
-                        <div class="empty-sub">Make sure Flask is running on port 5000</div>
-                    </div>`;
-            });
-    }
-
-    function deleteLog(id, btn) {
-        if (!confirm(`Delete record #${id}?`)) return;
-        btn.disabled = true;
-        fetch(`${API}/delete/${id}`, { method: 'DELETE' })
-            .then(() => fetchAll())
-            .catch(() => { btn.disabled = false; });
-    }
-
-    function clearLogs() {
-        if (!confirm('Delete all traffic logs? This cannot be undone.')) return;
-        fetch(`${API}/clear`, { method: 'DELETE' }).then(() => fetchAll());
-    }
-
-    fetchAll();
-    setInterval(fetchAll, 30000);
-</script>
-
+<script src="logic.js"></script>
 </body>
 </html>
